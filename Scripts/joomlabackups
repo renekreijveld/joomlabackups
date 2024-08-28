@@ -2,7 +2,7 @@
 
 # joomlabackups -- Create a full backup (including database) of all Joomla websites and optionally upload to Hetzner Storagebox
 #
-# Supports Joomla versions 2.5 - 5.x
+# Supports Joomla versions 1.0 - 5.x
 #
 # Copyright 2024 René Kreijveld - email@renekreijveld.nl
 #
