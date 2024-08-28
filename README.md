@@ -22,12 +22,12 @@ The script does the following:
 Syntax: `joomlabackups [-z] [-t] [-u] [-s] [-d] [-h]`
 
 All options are optional.  
--z: create a .zip backup file instead of a .tgz file
+-z: create a .zip backup file instead of a .tgz file  
 -t: add a date/time stamp to the backup file name  
 -u: upload the backup to a Hetzner Storagebox  
 -s: silent, do not display any messages, only errors will be displayed  
 -d: delete the local backup file after it is uploaded to the Hetzner Storagebox  
--h: display help  
+-h: display help
 
 The -s option is useful if you want to run the script as a cron job.
 
