@@ -88,7 +88,7 @@ The next Monday, `sitename.Mon.tgz` will be overwritten with the new Monday back
 The filenaming for weekly backups is different. The first week backup will be named as `/home/sitename/site/week/sitename.0.tgz`  
 The next week, `sitename.0.tgz` will renamed to `sitename.1.tgz` and the new backup will be named `sitename.0.tgz`.  
 The third week `sitename.1.tgz` will be renamed to `sitename.2.tgz` and `sitename.0.tgz` will be renamed to `sitename.1.tgz` and so on.  
-This will go on until there are 6 weekly backups, number from 0 (newest week backup) to 5 (oldest week backup).
+This will go on until there are 6 weekly backups, numbered from 0 (newest week backup) to 5 (oldest week backup).
 
 ### Monthly backups
 Monthly backups have the month number in the filename. The January backup will be named as `/home/sitename/site/month/sitename.01.tgz`  
