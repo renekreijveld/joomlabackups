@@ -64,12 +64,33 @@ When the backup scripts finds this file, it will skip the backup of that website
 The backups are stored in a folder with the name of the website. A subfolder called `site` is created below that folder.  
 Below the `site` folder, three folders are created: `day`, `week` and `month`.
 
-In the `day` folder, backups for each day except Sunday are stored.  
-In the `week` folder, the backups of the last 5 Sundays are stored.  
-In the `month` folder, the backups of the last 12 months are stored.
+All folders are created automatically by the script.
 
-The day backup is run every day, monday to saturday.  
-The week backup is run every sunday.  
+In the `day` folder, backups for each day except Sunday are stored.  
+In the `week` folder, backups of the last 6 Sundays are stored.  
+In the `month` folder, backups of the last 12 months are stored.
+
+The day backup is run every day, Monday to Saturday.  
+The week backup is run every Sunday.  
 The month backup is run on every first day of each month.  
 
-With this backupscheme, you keep backups for the last 6 weekdays, the last 6 sundays and the last 12 months.  
+With this backupscheme, you keep backups for the last 6 weekdays, the last 6 Sundays and the last 12 months.  
+
+## Backup filenames at the Hetzner Storagebox
+
+All backups will be rotated automatically.
+
+### Daily backups
+Daily backups have the abbreviated dayname in the backup. For example, the Monday will be named as `/home/sitename/site/day/sitename.Mon.tgz`  
+The next Monday, `sitename.Mon.tgz` will be overwritten with the new Monday backup.
+
+### Weekly backups
+The filenaming for weekly backups is different. The first week backup will be named as `/home/sitename/site/week/sitename.0.tgz`  
+The next week, `sitename.0.tgz` will renamed to `sitename.1.tgz` and the new backup will be named `sitename.0.tgz`.  
+The third week `sitename.1.tgz` will be renamed to `sitename.2.tgz` and `sitename.0.tgz` will be renamed to `sitename.1.tgz` and so on.  
+This will go on until there are 6 weekly backups, number from 0 (newest week backup) to 5 (oldest week backup).
+
+### Monthly backups
+Monthly backups have the month number in the filename. The January backup will be named as `/home/sitename/site/month/sitename.01.tgz`  
+The February backup will be named as `sitename.02.tgz` and so on until December.  
+The next January, `sitename.01.tgz` will be overwritten with the new January backup.
