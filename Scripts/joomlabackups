@@ -1,0 +1,202 @@
+#!/bin/bash
+
+# joomlabackups -- Create a full backup (including database) of all Joomla websites and optionally upload to Hetzner Storagebox
+#
+# Supports Joomla versions 2.5 - 5.x
+#
+# Copyright 2024 René Kreijveld - email@renekreijveld.nl
+#
+# This program is free software; you may redistribute it and/or modify it.
+#
+# Example cron command:
+# 30 1 * * * /usr/local/sbin/joomlabackups -s -u
+#
+# Version history
+# 1.0 Initial version
+# 1.1 Made options for upload, pcloudpath and server configurable
+# 2.0 Rewrite to support upload to Hetzner Storage Box. pCloud option removed. Added option for daily, weekly and monthly backups
+
+# Define variables
+# Version
+VERSION=2.0
+# Start folder where we start searching for Joomla websites
+STARTDIR=/home
+# Folder where local backups are stored on the server
+STOREPATH=/backups/sites
+# Rclone destination
+RCLONEDEST=storagebox
+# Determine path of script
+MYPATH=$(cd $(dirname ${0}); pwd -P)
+MYNAME=$(basename ${0})
+# Default settings
+EXTENSION="tgz"
+TIMESTAMP="no"
+SILENT="no"
+UPLOAD="no"
+DELETE="no"
+
+if [[ ! -e ${MYPATH}/jfunctions ]]; then
+    showmessage "Error: script jfunctions not found, exiting."
+    exit 1
+fi
+
+# Show message function
+showmessage() {
+    if [ "${SILENT}" == "no" ]; then
+        echo "$1"
+    fi
+}
+
+# Display usage information
+usage() {
+    echo ""
+    echo "${MYNAME} version ${VERSION}, written by René Kreijveld."
+    echo ""
+    echo "Usage: ${MYNAME} [-z] [-t] [-u] [-s] [-d] [-h]"
+    echo ""
+    echo "-z Create a ZIP backup file instead of a tar gzip (.tgz) file (default: .tgz)."
+    echo "-t Add a timestamp to the local backup file (default: no)."
+    echo "-u Backup files will be uploaded to Hetzner Storagebox (default: no)."
+    echo "-s Silent, no progress messages will be shown (default: yes)."
+    echo "-d Delete local backup after upload to Hetzner Storagebox (default: keep)."
+    echo "-h Help, display this info."
+    echo ""
+    exit 0
+}
+
+# Process command-line arguments
+while getopts ztusdh opt; do
+    case "${opt}" in
+        z) EXTENSION="zip" ;;
+        t) TIMESTAMP="yes" ;;
+        u) UPLOAD="yes" ;;
+        s) SILENT="yes" ;;
+        d) DELETE="yes" ;;
+        h) usage ;;
+        *) usage ;;
+    esac
+done
+
+showmessage "${MYNAME} version ${VERSION}, written by René Kreijveld."
+if [[ "${UPLOAD}" == "yes" ]]; then
+    showmessage "Backup files will be uploaded to Hetzner Storagebox."
+fi
+
+# Main loop
+for DIR in $(find ${STARTDIR} -maxdepth 4 -type d); do
+    if [[ -f ${DIR}/configuration.php ]]; then
+        # possible joomla found
+        showmessage " "
+        showmessage "Possible Joomla found at ${DIR}."
+
+        # Check if file .nobackup exists. Ff it does, skip this backup
+        if [[ -f ${DIR}/.nobackup ]]; then
+            showmessage "Nobackup flag found, skipping this folder."
+            continue
+        fi
+
+        # Go to the folder where a Joomla installation was found
+        cd ${DIR}
+
+        # Load jfunctions and check if we can extract information about this Joomla website
+        . ${MYPATH}/jfunctions
+
+       if [[ -z "${sitename}" ]]; then
+            showmessage "Sitename is empty, skipping this website."
+            continue
+        fi
+
+        showmessage "This website: ${sitename}, Joomla version ${jversion}."
+
+        # Dump the database to a .sql file
+        showmessage "Creating database dump."
+        if mysqldump --skip-opt --add-drop-table --add-locks --create-options --disable-keys --lock-tables --quick --set-charset --host=${host} --user=${dbuser} --password=${password} ${database} >${database}.sql; then
+            showmessage "${database}.sql created."
+        else
+            showmessage "Error creating database dump, skipping further backup of this website."
+            continue
+        fi
+
+        # Determine the parent folder of the Joomla website
+        PARENTDIR=$(basename "$PWD")
+
+        # Create backup folder to store backups if it doesn't exist
+        if [[ ! -d ${STOREPATH}/${sitename} ]]; then
+            mkdir -p ${STOREPATH}/${sitename}
+        fi
+
+        # Create the backup
+        showmessage "Start creating backup ${sitename}."
+        if [[ "${EXTENSION}" == "tgz" ]]; then
+            tar -czf ${STOREPATH}/${sitename}/${sitename}.${EXTENSION} ../${PARENTDIR} >/dev/null 2>&1
+        else
+            zip -q -r ${STOREPATH}/${sitename}/${sitename}.${EXTENSION} ../${PARENTDIR} >/dev/null 2>&1
+        fi
+        showmessage "Backup created in file ${STOREPATH}/${sitename}/${sitename}.${EXTENSION}"
+
+        # Upload the backup to Hetzner Storagebox
+        if [[ "${UPLOAD}" == "yes" ]]; then
+            DESTINATION=${sitename}/site/${sitename}.${EXTENSION}
+            showmessage "Executing: rclone copyto ${STOREPATH}/${sitename}/${sitename}.${EXTENSION} ${RCLONEDEST}:${DESTINATION}"
+            /usr/bin/rclone copyto ${STOREPATH}/${sitename}/${sitename}.${EXTENSION} ${RCLONEDEST}:${DESTINATION}
+
+            # Set the folders for various backup types
+            DEST_DAY="${sitename}/site/day"
+            DEST_WEEK="${sitename}/site/week"
+            DEST_MONTH="${sitename}/site/month"
+            # Get the current day of the month
+            DAY_OF_MONTH=$(date +%d)
+            # Get the current month number
+            MONTH_NUMBER=$(date +%m)
+            # Get the current day of the week (1=Monday, 7=Sunday)
+            DAY_OF_WEEK=$(date +%u)
+            # Get the abbreviated day name (e.g., Mon, Tue)
+            DAY_NAME=$(date +%a)
+
+            # Check if it's the first day of the month
+            if [ "$DAY_OF_MONTH" -eq 01 ]; then
+                showmessage "First day of the month, moving backup to month folder."
+                FILENAME="${DEST_MONTH}/${sitename}.${MONTH_NUMBER}.${EXTENSION}"
+            # Check if today is Sunday
+            elif [ "$DAY_OF_WEEK" -eq 7 ]; then
+                showmessage "Today is Sunday, moving backup to week folder."
+                LOCALFILE=${sitename}/site/week/${sitename}
+                for i in {5..1}; do
+                    j=$((i-1))
+                    showmessage "Executing: rclone moveto ${RCLONEDEST}:${LOCALFILE}.${j}.${EXTENSION} ${RCLONEDEST}:${LOCALFILE}.${i}.${EXTENSION}"
+                    rclone moveto ${RCLONEDEST}:${LOCALFILE}.${j}.${EXTENSION} ${RCLONEDEST}:${LOCALFILE}.${i}.${EXTENSION}
+                done
+                FILENAME="${DEST_WEEK}/${sitename}.0.${EXTENSION}"
+            # Otherwise, move the file to the day folder and rename it
+            else
+                showmessage "Moving backup to day folder."
+                FILENAME="${DEST_DAY}/${sitename}.${DAY_NAME}.${EXTENSION}"
+            fi
+            showmessage "Executing: rclone moveto ${RCLONEDEST}:${DESTINATION} ${RCLONEDEST}:${FILENAME}"
+            # Move uploaded backup to day, week or month folder
+            rclone moveto ${RCLONEDEST}:${DESTINATION} ${RCLONEDEST}:${FILENAME}
+
+            # Check if we need to delete the local backup
+            if [[ "${DELETE}" == "yes" ]]; then
+                showmessage "Deleting local backup ${STOREPATH}/${sitename}/${sitename}.${EXTENSION}"
+                rm ${STOREPATH}/${sitename}/${sitename}.${EXTENSION}
+            else
+                # No upload, so delete should always be no
+                DELETE="no"
+            fi
+        fi
+
+        # Add optional date/time timestamp to local backup file
+        if [[ "${TIMESTAMP}" == "yes" && "${DELETE}" == "no" ]]; then
+            # Create date/time stamp
+            NOW=$(date +"%Y%m%d.%H%M%S")
+            mv -f ${STOREPATH}/${sitename}/${sitename}.${EXTENSION} ${STOREPATH}/${sitename}/${sitename}.${NOW}.${EXTENSION}
+        fi
+
+        # Cleanup the datebase dump
+        showmessage "Delete database dump ${database}.sql."
+        rm ${database}.sql
+    fi
+done
+
+showmessage "${MYNAME} finished."
