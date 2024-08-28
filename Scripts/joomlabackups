@@ -14,7 +14,7 @@
 # Version history
 # 1.0 Initial version
 # 1.1 Made options for upload, pcloudpath and server configurable
-# 2.0 Rewrite to support upload to Hetzner Storage Box. pCloud option removed. Added option for daily, weekly and monthly backups
+# 2.0 Rewrite to support upload to Hetzner Storage Box. pCloud option removed. Added option for daily, weekly and monthly backups.
 
 # Define variables
 # Version
@@ -52,20 +52,20 @@ usage() {
     echo ""
     echo "${MYNAME} version ${VERSION}, written by René Kreijveld."
     echo ""
-    echo "Usage: ${MYNAME} [-z] [-t] [-u] [-s] [-d] [-h]"
+    echo "Usage: ${MYNAME} [-z] [-t] [-u] [-d] [-s] [-h]"
     echo ""
     echo "-z Create a ZIP backup file instead of a tar gzip (.tgz) file (default: .tgz)."
     echo "-t Add a timestamp to the local backup file (default: no)."
     echo "-u Backup files will be uploaded to Hetzner Storagebox (default: no)."
-    echo "-s Silent, no progress messages will be shown (default: yes)."
     echo "-d Delete local backup after upload to Hetzner Storagebox (default: keep)."
+    echo "-s Silent, no progress messages will be shown (default: yes)."
     echo "-h Help, display this info."
     echo ""
     exit 0
 }
 
 # Process command-line arguments
-while getopts ztusdh opt; do
+while getopts ztudsh opt; do
     case "${opt}" in
         z) EXTENSION="zip" ;;
         t) TIMESTAMP="yes" ;;

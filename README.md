@@ -1,25 +1,25 @@
 # Joomla bash backup script
 
 This script backups all Joomla websites found below a specified directory.  
-It will create a tar gzip (.tgz) or zip file for each website and store it in a specified backup directory.  
+It will create a tar gzip (.tgz) or zip (.zip) file for each website and store it in a specified backup directory.  
 Optionally, the script will upload the backup of each website to a Hetzner Storagebox with the rclone program.
 
-The joomlabacksups script uses the jfunctions bash script to retrieve information of the found Joomla websites.  
+The joomlabackups script uses the jfunctions script to retrieve information of the found Joomla websites.  
 The jfunctions script reads the configuration.php and other files to determine the database credentials, website name and Joomla version.
 
 ## Workflow
 
 The script does the following:  
-1. Search all folders below the startfolder to see if there is a configuration.php file.
-2. If it finds one, it tries to extract the database credentials, website name and Joomla version.
-3. It creates a dump of the joomla database.
-4. It creates a backup of the website folder (including the database dump) and stores the backup in a .tgz or .zip file in the backup directory.
-5. If specified it uploads the backup to a Hetzner Storagebox.
-6. If specified it adds a date/time stamp to the backup file name.
-7. It cleans up the database dump after the backup is created.
-8. It optionally deletes the local backup file after it is uploaded to the Hetzner Storagebox.
+1. Search all folders below the startdir folder to see if there is a configuration.php file.
+2. Extract database credentials, website name and Joomla version.
+3. Create a database dump of the joomla database.
+4. Create a backup of the website folder (including the database dump) and store that in the backup directory.
+5. If specified (-u option), upload the backup to a Hetzner Storagebox.
+6. If specified (-t option) it adds a date/time stamp to the backup file name.
+7. Remove database dump after the backup is created.
+8. If specified (-d option) delete the local backup file after it is uploaded to the Hetzner Storagebox.
 
-Syntax: `joomlabacksups [-z] [-t] [-u] [-s] [-d] [-h]`
+Syntax: `joomlabackups [-z] [-t] [-u] [-s] [-d] [-h]`
 
 All options are optional.  
 -z: create a .zip backup file instead of a .tgz file
@@ -33,9 +33,9 @@ The -s option is useful if you want to run the script as a cron job.
 
 ## Requirements
 
-- rclone installed and configured on your server to upload files to a Hetzner Storagebox  
+- Rclone installed and configured on your server to upload files to a Hetzner Storagebox.  
 See also: <a href="https://rclone.org/" target="_blank">RClone website</a> and <a href="https://docs.hetzner.com/robot/storage-box/access/access-ssh-rsync-borg#rclone" target="_blank">Hetzner Storagebox with RClone</a>.
-- zip installed if you want to create .zip files instead of .tgz files
+- Zip installed if you want to create .zip backups instead of .tgz backups.
 
 ## Installation
 
