@@ -44,9 +44,9 @@ See also: <a href="https://rclone.org/" target="_blank">RClone website</a> and <
 3. Copy the scripts joomlabackups and jfunctions to a directory in your PATH, for example to /usr/local/bin.
 4. Make the scripts executable with `chmod +x /usr/local/bin/joomlabackups /usr/local/bin/jfunctions`
 5. Optionally change the variables in the joomlabackups script to match your server setup:  
-STARTDIR: the directory where the script starts searching for Joomla sites  
-STOREPATH: the directory where the backups are stored  
-RCLONEDEST: the name of the rclone destination to upload the backups to (see ~/.config/rclone/rclone.conf)  
+STARTDIR (line 23): the directory where the script starts searching for Joomla sites  
+STOREPATH (line 25): the directory where the backups are stored  
+RCLONEDEST (line 27): the name of the rclone destination to upload the backups to (see ~/.config/rclone/rclone.conf)  
 6. Optionally create a cronjob the run the joomlabackups script at regular intervals.  
 An example cronjob that runs the script every day at 3:00 AM:  
 `0 3 * * * /usr/local/bin/joomlabackups -u -d -s`
