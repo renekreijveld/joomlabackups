@@ -1,6 +1,6 @@
 # Joomla bash backup script
 
-This script backups all Joomla websites found below a specified directory.  
+This script backups all Joomla websites found below a specified directory. This script works for Joomla websites versions 1.0 - 5.x.  
 It will create a tar gzip (.tgz) or zip (.zip) file for each website and store it in a specified backup directory.  
 Optionally, the script will upload the backup of each website to a Hetzner Storagebox with the rclone program.
 
